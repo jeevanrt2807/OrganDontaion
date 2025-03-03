@@ -13,13 +13,13 @@
         android:theme="@style/Theme.OrganDonation"
         tools:targetApi="31">
         <activity
-            android:name=".JoinDonationActivity"
+            android:name="jeevanS3340278.development.organdonation.JoinDonationActivity"
             android:exported="false" />
         <activity
-            android:name=".StartDonationActivity"
+            android:name="jeevanS3340278.development.organdonation.StartDonationActivity"
             android:exported="false" />
         <activity
-            android:name=".MainActivity"
+            android:name="jeevanS3340278.development.organdonation.MainActivity"
             android:exported="true"
             android:label="@string/app_name"
             android:theme="@style/Theme.OrganDonation">
