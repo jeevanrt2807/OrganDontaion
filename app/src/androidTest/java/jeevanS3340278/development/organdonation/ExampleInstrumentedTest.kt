@@ -1,4 +1,4 @@
-package com.example.organdonation
+package jeevanS3340278.development.organdonation
 
 import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.ext.junit.runners.AndroidJUnit4

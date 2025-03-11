@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "451697476170",
+    "project_id": "organdonation-eedfb",
+    "storage_bucket": "organdonation-eedfb.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:451697476170:android:e52b6037376ec08d735cb3",
+        "android_client_info": {
+          "package_name": "jeevanS3340278.development.organdonation"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyA9KAmVRmYdWQW4LWV7Vmklrr65kJ1gbZM"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

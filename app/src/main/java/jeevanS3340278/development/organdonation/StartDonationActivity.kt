@@ -1,17 +1,17 @@
-package com.example.organdonation
+package jeevanS3340278.development.organdonation
 
 import android.app.Activity
+import android.content.Context
 import android.content.Intent
 import android.os.Bundle
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -36,24 +36,21 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.google.firebase.database.FirebaseDatabase
 
-class JoinDonationActivity : ComponentActivity() {
+class StartDonationActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContent {
-            JoinDonationScreen()
+        setContent { 
+            StartDonationScreen()
         }
     }
 }
 
 @Composable
-fun JoinDonationScreen() {
-
-    var donorName by remember { mutableStateOf("") }
+fun StartDonationScreen() {
 
     var donorId by remember { mutableStateOf("") }
-    var donorAge by remember { mutableStateOf("") }
-    var donorBloodGroup by remember { mutableStateOf("") }
     var donorPassword by remember { mutableStateOf("") }
 
     val context = LocalContext.current as Activity
@@ -75,54 +72,19 @@ fun JoinDonationScreen() {
 
         TextField(
             modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 6.dp)
-                .align(Alignment.CenterHorizontally),
-            value = donorName,
-            onValueChange = { donorName = it },
-            label = { Text("Donor Name*") }
-        )
-
-        Spacer(modifier = Modifier.height(6.dp))
-
-        TextField(
-            modifier = Modifier
-                .fillMaxWidth()
+                .width(300.dp)
                 .padding(horizontal = 6.dp)
                 .align(Alignment.CenterHorizontally),
             value = donorId,
             onValueChange = { donorId = it },
-            label = { Text("Donor Email*") }
+            label = { Text("Email*") }
         )
-
-        Spacer(modifier = Modifier.height(6.dp))
-
-        Row(modifier = Modifier.fillMaxWidth()) {
-            TextField(
-                modifier = Modifier
-                    .width(100.dp)
-                    .padding(horizontal = 6.dp),
-                value = donorAge,
-                onValueChange = { donorAge = it },
-                label = { Text("Age*") }
-            )
-
-            TextField(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 6.dp),
-                value = donorBloodGroup,
-                onValueChange = { donorBloodGroup = it },
-                label = { Text("Blood Group*") }
-            )
-
-        }
 
         Spacer(modifier = Modifier.height(6.dp))
 
         TextField(
             modifier = Modifier
-                .fillMaxWidth()
+                .width(300.dp)
                 .padding(horizontal = 6.dp)
                 .align(Alignment.CenterHorizontally),
             value = donorPassword,
@@ -134,6 +96,34 @@ fun JoinDonationScreen() {
 
         Text(
             modifier = Modifier
+                .clickable {
+                    when{
+
+
+                        donorId.isBlank() -> {
+                            Toast.makeText(context, "Id missing", Toast.LENGTH_SHORT)
+                                .show()
+                        }
+                        donorPassword.isBlank() -> {
+                            Toast.makeText(context, "Name missing", Toast.LENGTH_SHORT)
+                                .show()
+
+                        }
+                        else -> {
+
+                            val donorDetails = DonorDetails(
+                                "",
+                                donorId,
+                                "",
+                                "",
+                                donorPassword
+                            )
+
+                            loginDonor(donorDetails, context)
+
+                        }
+                    }
+                }
                 .width(300.dp)
                 .background(
                     color = colorResource(id = R.color.black),
@@ -146,7 +136,7 @@ fun JoinDonationScreen() {
                 )
                 .padding(vertical = 6.dp)
                 .align(Alignment.CenterHorizontally),
-            text = "Join Donation",
+            text = "Start Donation",
             textAlign = TextAlign.Center,
             style = MaterialTheme.typography.titleLarge.copy(
                 color = Color.White,
@@ -158,12 +148,12 @@ fun JoinDonationScreen() {
         Text(
             modifier = Modifier
                 .clickable {
-                    context.startActivity(Intent(context, StartDonationActivity::class.java))
+                    context.startActivity(Intent(context, JoinDonationActivity::class.java))
                     context.finish()
                 }
                 .width(300.dp)
                 .align(Alignment.CenterHorizontally),
-            text = "Start Donation?",
+            text = "Want to Join Donation?",
             textAlign = TextAlign.Center,
             style = MaterialTheme.typography.titleSmall.copy(
                 color = Color.Black,
@@ -173,8 +163,45 @@ fun JoinDonationScreen() {
     }
 }
 
+
+fun loginDonor(donorDetails: DonorDetails, context: Context) {
+
+
+    val firebaseDatabase = FirebaseDatabase.getInstance()
+    val databaseReference = firebaseDatabase.getReference("DonorDetails").child(donorDetails.emailid.replace(".", ","))
+
+    databaseReference.get().addOnCompleteListener { task ->
+        if (task.isSuccessful) {
+            val donorData = task.result?.getValue(DonorDetails::class.java)
+            if (donorData != null) {
+                if (donorData.password == donorDetails.password) {
+                    Toast.makeText(context, "Login successful", Toast.LENGTH_SHORT).show()
+                    DonorSP.persistLoginState(context, true)
+                    DonorSP.persistUserMail(context, donorData.emailid)
+                    DonorSP.persistUserName(context, donorData.name)
+                    Toast.makeText(context, "Login Sucessfully", Toast.LENGTH_SHORT).show()
+
+//                    context.startActivity(Intent(context, HomeActivity::class.java))
+//                    (context as Activity).finish()
+                } else {
+                    Toast.makeText(context, "Seems Incorrect Credentials", Toast.LENGTH_SHORT).show()
+                }
+            } else {
+                Toast.makeText(context, "Your account not found", Toast.LENGTH_SHORT).show()
+            }
+        } else {
+            Toast.makeText(
+                context,
+                "Something went wrong",
+                Toast.LENGTH_SHORT
+            ).show()
+        }
+
+    }
+}
+
 @Preview(showBackground = true)
 @Composable
-fun JoinDonationScreenPreview() {
-    JoinDonationScreen()
+fun StartDonationScreenPreview() {
+    StartDonationScreen()
 }
