@@ -13,8 +13,11 @@
         android:theme="@style/Theme.OrganDonation"
         tools:targetApi="31">
         <activity
-            android:name=".RegisterDonorActivity"
+            android:name=".SearchDonorsActivity"
             android:exported="false" />
+         <activity
+         android:name=".RegisterDonorActivity"
+         android:exported="false" />
         <activity
             android:name=".DonorPanelActivity"
             android:exported="false" />

@@ -179,10 +179,10 @@ fun loginDonor(donorDetails: DonorDetails, context: Context) {
                     DonorSP.persistLoginState(context, true)
                     DonorSP.persistUserMail(context, donorData.emailid)
                     DonorSP.persistUserName(context, donorData.name)
-                    Toast.makeText(context, "Login Sucessfully", Toast.LENGTH_SHORT).show()
+//                    Toast.makeText(context, "Login Sucessfully", Toast.LENGTH_SHORT).show()
 
-//                    context.startActivity(Intent(context, HomeActivity::class.java))
-//                    (context as Activity).finish()
+                    context.startActivity(Intent(context, DonorPanelActivity::class.java))
+                    (context as Activity).finish()
                 } else {
                     Toast.makeText(context, "Seems Incorrect Credentials", Toast.LENGTH_SHORT).show()
                 }

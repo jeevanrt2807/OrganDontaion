@@ -62,8 +62,16 @@ fun DonorLanding()
         DonorLandingScreen()
 
     } else {
-        context.startActivity(Intent(context, StartDonationActivity::class.java))
-        context.finish()
+        val loginStatus = DonorSP.fetchLoginState(context)
+
+        if(loginStatus)
+        {
+            context.startActivity(Intent(context, DonorPanelActivity::class.java))
+            context.finish()
+        }else{
+            context.startActivity(Intent(context, StartDonationActivity::class.java))
+            context.finish()
+        }
     }
 
 }
