@@ -100,12 +100,12 @@ fun StartDonationScreen() {
                     when{
 
 
-                        donorId.isBlank() -> {
-                            Toast.makeText(context, "Id missing", Toast.LENGTH_SHORT)
+                        donorId.isEmpty() -> {
+                            Toast.makeText(context, "EmailId is mandatory", Toast.LENGTH_SHORT)
                                 .show()
                         }
-                        donorPassword.isBlank() -> {
-                            Toast.makeText(context, "Name missing", Toast.LENGTH_SHORT)
+                        donorPassword.isEmpty() -> {
+                            Toast.makeText(context, "Password is mandatory", Toast.LENGTH_SHORT)
                                 .show()
 
                         }
@@ -176,9 +176,9 @@ fun loginDonor(donorDetails: DonorDetails, context: Context) {
             if (donorData != null) {
                 if (donorData.password == donorDetails.password) {
                     Toast.makeText(context, "Login successful", Toast.LENGTH_SHORT).show()
-                    DonorSP.persistLoginState(context, true)
-                    DonorSP.persistUserMail(context, donorData.emailid)
-                    DonorSP.persistUserName(context, donorData.name)
+                    OrganDonorProfileData.persistLoginState(context, true)
+                    OrganDonorProfileData.persistUserMail(context, donorData.emailid)
+                    OrganDonorProfileData.persistUserName(context, donorData.name)
 //                    Toast.makeText(context, "Login Sucessfully", Toast.LENGTH_SHORT).show()
 
                     context.startActivity(Intent(context, DonorPanelActivity::class.java))

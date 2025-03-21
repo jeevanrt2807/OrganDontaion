@@ -1,7 +1,9 @@
 package jeevanS3340278.development.organdonation
 
 import android.app.Activity
+import android.content.Intent
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.Image
@@ -17,11 +19,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Card
-import androidx.compose.material3.Icon
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -43,17 +41,17 @@ import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.database.ValueEventListener
 
-class SearchDonorsActivity : ComponentActivity() {
+class ManageDonorActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
-            DonorSearchScreen()
+            ManageDonorScreen()
         }
     }
 }
 
 @Composable
-fun DonorSearchScreen() {
+fun ManageDonorScreen() {
     var searchQuery by remember { mutableStateOf("") }
 
     // Sample Donor List
@@ -67,8 +65,6 @@ fun DonorSearchScreen() {
 //        Donor("Ramesh Yadav", 50, "A-", listOf("Liver", "Pancreas"))
 //    )
 
-
-
     val context = LocalContext.current as Activity
 
     val userEmail = OrganDonorProfileData.fetchUserMail(context)
@@ -77,7 +73,7 @@ fun DonorSearchScreen() {
     var isLoading by remember { mutableStateOf(true) }
 
     LaunchedEffect(userEmail) {
-        getDonorsList() { orders ->
+        getMyDonorsList(userEmail) { orders ->
             donorsList = orders
 
             isLoading = false
@@ -116,7 +112,7 @@ fun DonorSearchScreen() {
             Text(
                 modifier = Modifier
                     .fillMaxWidth(),
-                text = "Organ Donor Registration",
+                text = "Manage Donors",
                 color = Color.White,
                 fontSize = 22.sp,
                 fontWeight = FontWeight.Bold,
@@ -125,89 +121,90 @@ fun DonorSearchScreen() {
 
         }
 
-        Column(modifier = Modifier
-            .fillMaxSize()
-            .padding(16.dp)) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(horizontal = 16.dp)
+        ) {
 
 
             // Search Bar
-            OutlinedTextField(
-                value = searchQuery,
-                onValueChange = { searchQuery = it },
-                label = { Text("Search Donors (by Name or Blood Group)") },
-                leadingIcon = { Icon(Icons.Default.Search, contentDescription = "Search Icon") },
-                modifier = Modifier.fillMaxWidth()
-            )
+//            OutlinedTextField(
+//                value = searchQuery,
+//                onValueChange = { searchQuery = it },
+//                label = { Text("Search Donors (by Name or Blood Group)") },
+//                leadingIcon = { Icon(Icons.Default.Search, contentDescription = "Search Icon") },
+//                modifier = Modifier.fillMaxWidth()
+//            )
 
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(12.dp))
 
             // Donor List
             LazyColumn {
                 items(filteredDonors) { donor ->
-                    DonorItem(donor)
+                    ManageDonorItem(donor)
                 }
             }
         }
     }
 }
 
-// Donor Data Class
-data class Donor(
-    val name: String,
-    val age: Int,
-    val bloodGroup: String,
-    val organs: List<String>
-)
 
 // Donor Item UI
 @Composable
-fun DonorItem(donor: DonorFormData) {
+fun ManageDonorItem(donor: DonorFormData) {
+
+    val context = LocalContext.current as Activity
+
     Card(
         modifier = Modifier
             .fillMaxWidth()
             .padding(vertical = 8.dp)
+            .clickable {
+
+            }
     ) {
-        Column(modifier = Modifier.padding(16.dp)) {
-            Text(text = "Donor Name : ${donor.name}", fontWeight = FontWeight.Bold, fontSize = 20.sp)
-            Text(text = "Age : ${donor.age}", fontSize = 16.sp)
-            Text(text = "Blood Group : ${donor.blood}", fontSize = 16.sp)
-            Text(text = "Organs : ${donor.organsToDonate}", fontSize = 16.sp)
+        Row {
+
+            Column(
+                modifier = Modifier
+                    .weight(1f)
+                    .padding(16.dp)
+            ) {
+                Text(
+                    text = "Donor Name : ${donor.name}",
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 20.sp
+                )
+                Text(text = "Age : ${donor.age}", fontSize = 16.sp)
+                Text(text = "Blood Group : ${donor.blood}", fontSize = 16.sp)
+                Text(text = "Organs : ${donor.organsToDonate}", fontSize = 16.sp)
+            }
+
+            Image(
+                modifier = Modifier
+                    .size(36.dp)
+                    .clickable {
+                        ManageDonorData.selectedScreen = 2
+                        ManageDonorData.donorFormData = donor
+                        Log.e("Test", "Bef - ${ManageDonorData.donorFormData}")
+                        context.startActivity(Intent(context, RegisterDonorActivity::class.java))
+                    },
+                painter = painterResource(id = R.drawable.iv_edit),
+                contentDescription = "Arrow Back"
+            )
+
         }
     }
 }
 
-fun getDonorsList(callback: (List<DonorFormData>) -> Unit) {
-    val databaseReference = FirebaseDatabase.getInstance().getReference("RegisteredDonors")
-
-    databaseReference.addListenerForSingleValueEvent(object : ValueEventListener {
-        override fun onDataChange(snapshot: DataSnapshot) {
-            val donationsList = mutableListOf<DonorFormData>()
-
-            for (donorSnapshot in snapshot.children) { // Iterate through email keys
-                for (donationSnapshot in donorSnapshot.children) { // Iterate through donation entries
-                    val donation = donationSnapshot.getValue(DonorFormData::class.java)
-                    donation?.let { donationsList.add(it) }
-                }
-            }
-
-            callback(donationsList)
-        }
-
-        override fun onCancelled(error: DatabaseError) {
-            println("Error: ${error.message}")
-            callback(emptyList())
-        }
-    })
-}
-
-
-fun getDonorsListOld(userEmail: String, callback: (List<DonorFormData>) -> Unit) {
+fun getMyDonorsList(userEmail: String, callback: (List<DonorFormData>) -> Unit) {
     val emailKey = userEmail.replace(".", ",")
 
-    val databaseReference = FirebaseDatabase.getInstance().getReference("RegisteredDonors/")
+    val databaseReference =
+        FirebaseDatabase.getInstance().getReference("RegisteredDonors/$emailKey")
 
 //    val databaseReference = FirebaseDatabase.getInstance().getReference("RegisteredDonors/$emailKey")
-
 
     databaseReference.addListenerForSingleValueEvent(object : ValueEventListener {
         override fun onDataChange(snapshot: DataSnapshot) {
@@ -224,4 +221,13 @@ fun getDonorsListOld(userEmail: String, callback: (List<DonorFormData>) -> Unit)
             callback(emptyList())
         }
     })
+}
+
+object ManageDonorData {
+    var selectedScreen = 0
+    var donorFormData = DonorFormData()
+
+    fun resetData() {
+        donorFormData = DonorFormData()
+    }
 }

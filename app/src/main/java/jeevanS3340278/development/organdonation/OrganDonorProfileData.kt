@@ -3,7 +3,7 @@ package jeevanS3340278.development.organdonation
 import android.content.Context
 
 
-object DonorSP {
+object OrganDonorProfileData {
 
     fun persistLoginState(context: Context, value: Boolean) {
         val userLogin = context.getSharedPreferences("ORGAN_DONATION", Context.MODE_PRIVATE)

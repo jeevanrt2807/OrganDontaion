@@ -139,28 +139,28 @@ fun JoinDonationScreen() {
                 .clickable {
                     when {
 
-                        donorName.isBlank() -> {
-                            Toast.makeText(context, "Name missing", Toast.LENGTH_SHORT)
+                        donorName.isEmpty() -> {
+                            Toast.makeText(context, "Name is mandatory", Toast.LENGTH_SHORT)
                                 .show()
 
                         }
 
-                        donorId.isBlank() -> {
-                            Toast.makeText(context, "Id missing", Toast.LENGTH_SHORT)
+                        donorId.isEmpty() -> {
+                            Toast.makeText(context, "EmailId is mandatory", Toast.LENGTH_SHORT)
                                 .show()
                         }
 
-                        donorAge.isBlank() -> {
-                            Toast.makeText(context, "Age missing", Toast.LENGTH_SHORT)
+                        donorAge.isEmpty() -> {
+                            Toast.makeText(context, "Age is mandatory", Toast.LENGTH_SHORT)
                                 .show()
                         }
 
-                        donorBloodGroup.isBlank() -> {
-                            Toast.makeText(context, "BloodGroup missing", Toast.LENGTH_SHORT)
+                        donorBloodGroup.isEmpty() -> {
+                            Toast.makeText(context, "BloodGroup is mandatory", Toast.LENGTH_SHORT)
                                 .show()
                         }
-                        donorPassword.isBlank() -> {
-                            Toast.makeText(context, "Password missing", Toast.LENGTH_SHORT)
+                        donorPassword.isEmpty() -> {
+                            Toast.makeText(context, "Password is mandatory", Toast.LENGTH_SHORT)
                                 .show()
                         }
 

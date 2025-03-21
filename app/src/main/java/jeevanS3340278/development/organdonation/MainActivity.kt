@@ -62,7 +62,7 @@ fun DonorLanding()
         DonorLandingScreen()
 
     } else {
-        val loginStatus = DonorSP.fetchLoginState(context)
+        val loginStatus = OrganDonorProfileData.fetchLoginState(context)
 
         if(loginStatus)
         {
