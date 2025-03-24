@@ -1,11 +1,17 @@
 package jeevanS3340278.development.organdonation
 
 import android.app.Activity
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
+import android.graphics.Matrix
+import android.media.ExifInterface
 import android.os.Bundle
+import android.util.Base64
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -17,6 +23,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Card
@@ -31,7 +38,10 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
@@ -42,6 +52,8 @@ import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.database.ValueEventListener
+import java.io.ByteArrayInputStream
+import java.io.IOException
 
 class SearchDonorsActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -68,7 +80,6 @@ fun DonorSearchScreen() {
 //    )
 
 
-
     val context = LocalContext.current as Activity
 
     val userEmail = OrganDonorProfileData.fetchUserMail(context)
@@ -86,7 +97,8 @@ fun DonorSearchScreen() {
 
     val filteredDonors = donorsList.filter {
         it.name.contains(searchQuery, ignoreCase = true) ||
-                it.blood.contains(searchQuery, ignoreCase = true)
+                it.blood.contains(searchQuery, ignoreCase = true) ||
+                it.organsToDonate.contains(searchQuery, ignoreCase = true)
     }
 
     Column(
@@ -125,16 +137,18 @@ fun DonorSearchScreen() {
 
         }
 
-        Column(modifier = Modifier
-            .fillMaxSize()
-            .padding(16.dp)) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(16.dp)
+        ) {
 
 
             // Search Bar
             OutlinedTextField(
                 value = searchQuery,
                 onValueChange = { searchQuery = it },
-                label = { Text("Search Donors (by Name or Blood Group)") },
+                label = { Text("Search Donors (by Name or Blood Group or Organ)") },
                 leadingIcon = { Icon(Icons.Default.Search, contentDescription = "Search Icon") },
                 modifier = Modifier.fillMaxWidth()
             )
@@ -167,11 +181,33 @@ fun DonorItem(donor: DonorFormData) {
             .fillMaxWidth()
             .padding(vertical = 8.dp)
     ) {
-        Column(modifier = Modifier.padding(16.dp)) {
-            Text(text = "Donor Name : ${donor.name}", fontWeight = FontWeight.Bold, fontSize = 20.sp)
-            Text(text = "Age : ${donor.age}", fontSize = 16.sp)
-            Text(text = "Blood Group : ${donor.blood}", fontSize = 16.sp)
-            Text(text = "Organs : ${donor.organsToDonate}", fontSize = 16.sp)
+        Row(modifier = Modifier.padding(16.dp)) {
+
+
+            if (donor.imageUrl.isNotEmpty())
+                Image(
+                    bitmap = decodeBase64ToBitmap(donor.imageUrl)!!.asImageBitmap(),
+                    contentDescription = "Organ Donor Image",
+                    modifier = Modifier
+                        .size(100.dp)
+                        .padding(end = 8.dp)
+                        .clip(CircleShape)  // Make it circular
+                        .border(2.dp, Color.Gray, CircleShape),  // Optional border
+                    contentScale = ContentScale.Crop
+                )
+
+
+
+            Column() {
+                Text(
+                    text = "Donor Name : ${donor.name}",
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 20.sp
+                )
+                Text(text = "Age : ${donor.age}", fontSize = 16.sp)
+                Text(text = "Blood Group : ${donor.blood}", fontSize = 16.sp)
+                Text(text = "Organs : ${donor.organsToDonate}", fontSize = 16.sp)
+            }
         }
     }
 }
@@ -224,4 +260,66 @@ fun getDonorsListOld(userEmail: String, callback: (List<DonorFormData>) -> Unit)
             callback(emptyList())
         }
     })
+}
+
+
+fun decodeBase64ToBitmap(base64String: String): Bitmap? {
+    val decodedString = Base64.decode(base64String, Base64.DEFAULT)
+
+    // Convert byte array to Bitmap
+    val originalBitmap = BitmapFactory.decodeByteArray(decodedString, 0, decodedString.size)
+
+    return originalBitmap
+    // Correct the orientation of the image using ExifInterface
+//    return rotateImageToRight(originalBitmap)
+}
+
+
+// Function to rotate the image to the right (90 degrees clockwise)
+fun rotateImageToRight(bitmap: Bitmap): Bitmap {
+    val matrix = Matrix()
+    matrix.postRotate(90f) // Rotate 90 degrees clockwise
+    return Bitmap.createBitmap(bitmap, 0, 0, bitmap.width, bitmap.height, matrix, true)
+}
+
+fun correctOrientation(bitmap: Bitmap, imageBytes: ByteArray): Bitmap {
+    try {
+        // Using ExifInterface to get the orientation of the image
+        val exif = ExifInterface(ByteArrayInputStream(imageBytes))
+
+        // Get the orientation tag from EXIF metadata
+        val orientation =
+            exif.getAttributeInt(ExifInterface.TAG_ORIENTATION, ExifInterface.ORIENTATION_NORMAL)
+
+        // Rotate the image based on the orientation tag
+        return when (orientation) {
+            ExifInterface.ORIENTATION_ROTATE_90 -> rotateBitmap(bitmap, 90f)
+            ExifInterface.ORIENTATION_ROTATE_180 -> rotateBitmap(bitmap, 180f)
+            ExifInterface.ORIENTATION_ROTATE_270 -> rotateBitmap(bitmap, 270f)
+            ExifInterface.ORIENTATION_FLIP_HORIZONTAL -> flipBitmap(
+                bitmap,
+                horizontal = true,
+                false
+            )
+
+            ExifInterface.ORIENTATION_FLIP_VERTICAL -> flipBitmap(bitmap, horizontal = false, true)
+            else -> bitmap // No rotation needed
+        }
+    } catch (e: IOException) {
+        e.printStackTrace()
+    }
+    return bitmap
+}
+
+fun rotateBitmap(source: Bitmap, angle: Float): Bitmap {
+    val matrix = android.graphics.Matrix()
+    matrix.postRotate(angle)
+    return Bitmap.createBitmap(source, 0, 0, source.width, source.height, matrix, true)
+}
+
+fun flipBitmap(source: Bitmap, horizontal: Boolean, vertical: Boolean): Bitmap {
+    val matrix = android.graphics.Matrix()
+    if (horizontal) matrix.postScale(-1f, 1f)
+    if (vertical) matrix.postScale(1f, -1f)
+    return Bitmap.createBitmap(source, 0, 0, source.width, source.height, matrix, true)
 }

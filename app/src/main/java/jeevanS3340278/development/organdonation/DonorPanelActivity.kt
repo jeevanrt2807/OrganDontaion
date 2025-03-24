@@ -209,7 +209,7 @@ fun DonorPanelActivityScreen() {
             Column(
                 modifier = Modifier
                     .clickable {
-                        context.startActivity(Intent(context, RegisterDonorActivity::class.java))
+                        context.startActivity(Intent(context, FAQActivity::class.java))
                     }
                     .fillMaxWidth()
                     .border(

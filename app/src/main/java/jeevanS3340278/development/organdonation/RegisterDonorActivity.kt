@@ -1,15 +1,24 @@
 package jeevanS3340278.development.organdonation
 
+import android.Manifest
 import android.app.Activity
 import android.content.Context
+import android.content.pm.PackageManager
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
+import android.net.Uri
 import android.os.Bundle
+import android.util.Base64
 import android.util.Log
 import android.widget.Toast
 import androidx.activity.ComponentActivity
+import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -18,6 +27,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
@@ -40,7 +50,12 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.content.ContextCompat
+import androidx.core.content.FileProvider
+import coil.compose.rememberAsyncImagePainter
 import com.google.firebase.database.FirebaseDatabase
+import java.io.ByteArrayOutputStream
+import java.io.File
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -139,6 +154,11 @@ fun DonorRegistrationForm() {
 
 
             Spacer(modifier = Modifier.height(16.dp))
+
+            if (ManageDonorData.selectedScreen == 1)
+                CaptureImageExample()
+
+            Spacer(modifier = Modifier.height(8.dp))
 
             OutlinedTextField(
                 value = fullName,
@@ -260,6 +280,7 @@ fun DonorRegistrationForm() {
                             selOrgans = "$selOrgans$organ,"
                         }
 
+
                         val donorFormData = DonorFormData(
                             fullName,
                             age,
@@ -271,9 +292,21 @@ fun DonorRegistrationForm() {
                             ManageDonorData.donorFormData.id
                         )
 
-                        if (ManageDonorData.selectedScreen == 1)
+                        if (ManageDonorData.selectedScreen == 1) {
+
+                            val inputStream =
+                                context.contentResolver.openInputStream(SelectedImage.selImageUri)
+                            val bitmap = BitmapFactory.decodeStream(inputStream)
+                            val outputStream = ByteArrayOutputStream()
+                            bitmap.compress(Bitmap.CompressFormat.JPEG, 100, outputStream)
+                            val base64Image =
+                                Base64.encodeToString(outputStream.toByteArray(), Base64.DEFAULT)
+
+                            donorFormData.imageUrl = base64Image
+
                             registerDonor(donorFormData, context)
-                        else {
+                        } else {
+
                             val updatedData = mapOf(
                                 "address" to donorFormData.address,
                                 "age" to donorFormData.age,
@@ -282,7 +315,8 @@ fun DonorRegistrationForm() {
                                 "name" to donorFormData.name,
                                 "organsToDonate" to donorFormData.organsToDonate,
                                 "phoneNumber" to donorFormData.phoneNumber,
-                                "id" to donorFormData.id
+                                "id" to donorFormData.id,
+                                "imageUrl" to ManageDonorData.donorFormData
                             )
                             updateDonorDetails(donorFormData.id, updatedData, context)
 
@@ -350,7 +384,8 @@ data class DonorFormData(
     var email: String = "",
     var address: String = "",
     var organsToDonate: String = "",
-    var id: String = ""
+    var id: String = "",
+    var imageUrl: String = ""
 )
 
 
@@ -358,11 +393,14 @@ fun updateDonorDetails(donorId: String, updatedData: Map<String, Any>, context: 
 
 
     try {
-        val emailKey = OrganDonorProfileData.fetchUserMail(context).replace(".", ",") // Convert email for Firebase key
+        val emailKey = OrganDonorProfileData.fetchUserMail(context)
+            .replace(".", ",") // Convert email for Firebase key
 
         val path = "RegisteredDonors/$emailKey/$donorId"
         Log.e("Test", "Patch Called : $path")
         val databaseReference = FirebaseDatabase.getInstance().getReference(path)
+
+
 
         databaseReference.updateChildren(updatedData)
             .addOnSuccessListener {
@@ -381,10 +419,89 @@ fun updateDonorDetails(donorId: String, updatedData: Map<String, Any>, context: 
                     Toast.LENGTH_SHORT
                 ).show()
             }
-    }catch (e: Exception)
-    {
-        Log.e("Test","Error Message : ${e.message}")
+    } catch (e: Exception) {
+        Log.e("Test", "Error Message : ${e.message}")
     }
 }
 
+
+@Composable
+fun CaptureImageExample() {
+    val activityContext = LocalContext.current
+
+    var imageUri by remember { mutableStateOf<Uri?>(null) }
+
+    val captureImageLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.TakePicture(),
+        onResult = { success ->
+            if (success) {
+                imageUri = getImageUri(activityContext)
+                SelectedImage.selImageUri = imageUri as Uri
+
+//                Toast.makeText(activityContext, "Image Captured", Toast.LENGTH_SHORT).show()
+            } else {
+                Toast.makeText(activityContext, "Capture Failed", Toast.LENGTH_SHORT).show()
+            }
+        }
+    )
+
+    val permissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission(),
+        onResult = { isGranted ->
+            if (isGranted) {
+                Toast.makeText(activityContext, "Permission Granted", Toast.LENGTH_SHORT).show()
+                captureImageLauncher.launch(getImageUri(activityContext)) // Launch the camera
+            } else {
+                Toast.makeText(activityContext, "Permission Denied", Toast.LENGTH_SHORT).show()
+            }
+        }
+    )
+
+    Column(
+        modifier = Modifier.fillMaxSize(),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center
+    ) {
+        Image(
+            painter = if (imageUri != null) {
+                rememberAsyncImagePainter(model = imageUri)
+            } else {
+                painterResource(id = R.drawable.ic_add_image)
+            },
+            contentDescription = "Captured Image",
+            modifier = Modifier
+                .width(100.dp)
+                .height(100.dp)
+                .clickable {
+                    if (ContextCompat.checkSelfPermission(
+                            activityContext,
+                            Manifest.permission.CAMERA
+                        ) == PackageManager.PERMISSION_GRANTED
+                    ) {
+                        captureImageLauncher.launch(getImageUri(activityContext))
+                    } else {
+                        permissionLauncher.launch(Manifest.permission.CAMERA)
+                    }
+                }
+        )
+        Spacer(modifier = Modifier.height(16.dp))
+        if (imageUri == null) {
+            Text(text = "Tap the image to capture")
+        }
+    }
+}
+
+fun getImageUri(activityContext: Context): Uri {
+    val file = File(activityContext.filesDir, "captured_image.jpg")
+    return FileProvider.getUriForFile(
+        activityContext,
+        "${activityContext.packageName}.fileprovider",
+        file
+    )
+}
+
+
+object SelectedImage {
+    lateinit var selImageUri: Uri
+}
 
