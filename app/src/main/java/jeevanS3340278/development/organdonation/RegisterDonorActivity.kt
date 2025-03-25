@@ -64,6 +64,8 @@ class RegisterDonorActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
+            DonorPhoto.isImageSelected=false
+
             DonorRegistrationForm()
         }
     }
@@ -82,17 +84,10 @@ fun DonorRegistrationForm() {
     var address by remember { mutableStateOf(ManageDonorData.donorFormData.address.ifEmpty { "" }) }
     var consentChecked by remember { mutableStateOf(false) }
 
-
-//    fun parseOrgansList(organsToDonate: String): List<String> {
-//        return organs.split(",").map { it.trim() }.filter { it.isNotEmpty() }
-//    }
-
     val donorOrgans = ManageDonorData.donorFormData.organsToDonate.split(",").map { it.trim() }
         .filter { it.isNotEmpty() }
 
     var selectedOrgans by remember { mutableStateOf(donorOrgans.ifEmpty { listOf<String>() }) }
-
-//    var selectedOrgans by remember { mutableStateOf(listOf<String>()) }
 
     val organOptions =
         listOf("Heart", "Liver", "Kidney", "Lungs", "Pancreas", "Cornea", "Skin", "Bone Marrow")
@@ -143,8 +138,6 @@ fun DonorRegistrationForm() {
 
         }
 
-//        Text(text = "Organ Donor Registration", fontSize = 24.sp, fontWeight = FontWeight.Bold)
-
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -156,7 +149,7 @@ fun DonorRegistrationForm() {
             Spacer(modifier = Modifier.height(16.dp))
 
             if (ManageDonorData.selectedScreen == 1)
-                CaptureImageExample()
+                UploadDonorImage()
 
             Spacer(modifier = Modifier.height(8.dp))
 
@@ -190,7 +183,11 @@ fun DonorRegistrationForm() {
 
             OutlinedTextField(
                 value = phoneNumber,
-                onValueChange = { if (it.all { char -> char.isDigit() }) phoneNumber = it },
+                onValueChange = {
+                    if (it.all { char -> char.isDigit() } && it.length <= 10) {
+                        phoneNumber = it
+                    }
+                },
                 label = { Text("Phone Number") },
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
                 modifier = Modifier.fillMaxWidth()
@@ -268,63 +265,70 @@ fun DonorRegistrationForm() {
                         phoneNumber.isNotEmpty() && email.isNotEmpty() && address.isNotEmpty() &&
                         selectedOrgans.isNotEmpty() && consentChecked
                     ) {
-                        // Perform registration action here (e.g., save to database)
-                        Log.d(
-                            "DonorRegistration",
-                            "Donor Registered: $fullName, $selectedOrgans"
-                        )
-
-                        var selOrgans = ""
-
-                        for (organ in selectedOrgans) {
-                            selOrgans = "$selOrgans$organ,"
-                        }
-
-
-                        val donorFormData = DonorFormData(
-                            fullName,
-                            age,
-                            blood = bloodGroup,
-                            phoneNumber,
-                            email,
-                            address,
-                            selOrgans,
-                            ManageDonorData.donorFormData.id
-                        )
-
-                        if (ManageDonorData.selectedScreen == 1) {
-
-                            val inputStream =
-                                context.contentResolver.openInputStream(SelectedImage.selImageUri)
-                            val bitmap = BitmapFactory.decodeStream(inputStream)
-                            val outputStream = ByteArrayOutputStream()
-                            bitmap.compress(Bitmap.CompressFormat.JPEG, 100, outputStream)
-                            val base64Image =
-                                Base64.encodeToString(outputStream.toByteArray(), Base64.DEFAULT)
-
-                            donorFormData.imageUrl = base64Image
-
-                            registerDonor(donorFormData, context)
-                        } else {
-
-                            val updatedData = mapOf(
-                                "address" to donorFormData.address,
-                                "age" to donorFormData.age,
-                                "blood" to donorFormData.blood,
-                                "email" to donorFormData.email,
-                                "name" to donorFormData.name,
-                                "organsToDonate" to donorFormData.organsToDonate,
-                                "phoneNumber" to donorFormData.phoneNumber,
-                                "id" to donorFormData.id,
-                                "imageUrl" to ManageDonorData.donorFormData
+                        if(DonorPhoto.isImageSelected) {
+                            // Perform registration action here (e.g., save to database)
+                            Log.d(
+                                "DonorRegistration",
+                                "Donor Registered: $fullName, $selectedOrgans"
                             )
-                            updateDonorDetails(donorFormData.id, updatedData, context)
 
+                            var selOrgans = ""
+
+                            for (organ in selectedOrgans) {
+                                selOrgans = "$selOrgans$organ,"
+                            }
+
+
+                            val donorFormData = DonorFormData(
+                                fullName,
+                                age,
+                                blood = bloodGroup,
+                                phoneNumber,
+                                email,
+                                address,
+                                selOrgans,
+                                ManageDonorData.donorFormData.id
+                            )
+
+                            if (ManageDonorData.selectedScreen == 1) {
+
+                                val inputStream =
+                                    context.contentResolver.openInputStream(DonorPhoto.selImageUri)
+                                val bitmap = BitmapFactory.decodeStream(inputStream)
+                                val outputStream = ByteArrayOutputStream()
+                                bitmap.compress(Bitmap.CompressFormat.JPEG, 100, outputStream)
+                                val base64Image =
+                                    Base64.encodeToString(
+                                        outputStream.toByteArray(),
+                                        Base64.DEFAULT
+                                    )
+
+                                donorFormData.imageUrl = base64Image
+
+                                registerDonor(donorFormData, context)
+                            } else {
+
+                                val updatedData = mapOf(
+                                    "address" to donorFormData.address,
+                                    "age" to donorFormData.age,
+                                    "blood" to donorFormData.blood,
+                                    "email" to donorFormData.email,
+                                    "name" to donorFormData.name,
+                                    "organsToDonate" to donorFormData.organsToDonate,
+                                    "phoneNumber" to donorFormData.phoneNumber,
+                                    "id" to donorFormData.id,
+                                    "imageUrl" to ManageDonorData.donorFormData
+                                )
+                                updateDonorDetails(donorFormData.id, updatedData, context)
+
+                            }
+
+                        }else{
+                            Toast.makeText(context,"Please upload image",Toast.LENGTH_SHORT).show()
                         }
-
 
                     } else {
-                        Log.d("DonorRegistration", "Please fill all fields and accept consent")
+                        Toast.makeText(context,"Fill all fields",Toast.LENGTH_SHORT).show()
                     }
                 },
                 enabled = consentChecked,
@@ -344,16 +348,11 @@ fun DonorRegistrationForm() {
 
 private fun registerDonor(donorFormData: DonorFormData, activityContext: Context) {
 
-    val fireDB = FirebaseDatabase.getInstance()
-    val databaseRef = fireDB.getReference("RegisteredDonors")
-
-    val userEmail = OrganDonorProfileData.fetchUserMail(activityContext)
-
+    val userEmail = OrganDonorProfileData.getDonorMail(activityContext)
     val dateFormat = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault())
     val orderId = dateFormat.format(Date())
     donorFormData.id = orderId
-
-    databaseRef.child(userEmail.replace(".", ",")).child(orderId).setValue(donorFormData)
+    FirebaseDatabase.getInstance().getReference("RegisteredDonors").child(userEmail.replace(".", ",")).child(orderId).setValue(donorFormData)
         .addOnCompleteListener { task ->
             if (task.isSuccessful) {
                 Toast.makeText(activityContext, "Donor Registered Successfully", Toast.LENGTH_SHORT)
@@ -393,16 +392,10 @@ fun updateDonorDetails(donorId: String, updatedData: Map<String, Any>, context: 
 
 
     try {
-        val emailKey = OrganDonorProfileData.fetchUserMail(context)
-            .replace(".", ",") // Convert email for Firebase key
-
+        val emailKey = OrganDonorProfileData.getDonorMail(context)
+            .replace(".", ",")
         val path = "RegisteredDonors/$emailKey/$donorId"
-        Log.e("Test", "Patch Called : $path")
-        val databaseReference = FirebaseDatabase.getInstance().getReference(path)
-
-
-
-        databaseReference.updateChildren(updatedData)
+        FirebaseDatabase.getInstance().getReference(path).updateChildren(updatedData)
             .addOnSuccessListener {
                 Toast.makeText(
                     context,
@@ -426,7 +419,7 @@ fun updateDonorDetails(donorId: String, updatedData: Map<String, Any>, context: 
 
 
 @Composable
-fun CaptureImageExample() {
+fun UploadDonorImage() {
     val activityContext = LocalContext.current
 
     var imageUri by remember { mutableStateOf<Uri?>(null) }
@@ -436,10 +429,10 @@ fun CaptureImageExample() {
         onResult = { success ->
             if (success) {
                 imageUri = getImageUri(activityContext)
-                SelectedImage.selImageUri = imageUri as Uri
-
-//                Toast.makeText(activityContext, "Image Captured", Toast.LENGTH_SHORT).show()
+                DonorPhoto.selImageUri = imageUri as Uri
+                DonorPhoto.isImageSelected=true
             } else {
+                DonorPhoto.isImageSelected=false
                 Toast.makeText(activityContext, "Capture Failed", Toast.LENGTH_SHORT).show()
             }
         }
@@ -501,7 +494,8 @@ fun getImageUri(activityContext: Context): Uri {
 }
 
 
-object SelectedImage {
+object DonorPhoto {
     lateinit var selImageUri: Uri
+    var isImageSelected = false
 }
 

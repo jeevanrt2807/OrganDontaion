@@ -140,27 +140,33 @@ fun JoinDonationScreen() {
                     when {
 
                         donorName.isEmpty() -> {
-                            Toast.makeText(context, "Name is mandatory", Toast.LENGTH_SHORT)
+                            Toast
+                                .makeText(context, "Name is mandatory", Toast.LENGTH_SHORT)
                                 .show()
 
                         }
 
                         donorId.isEmpty() -> {
-                            Toast.makeText(context, "EmailId is mandatory", Toast.LENGTH_SHORT)
+                            Toast
+                                .makeText(context, "EmailId is mandatory", Toast.LENGTH_SHORT)
                                 .show()
                         }
 
                         donorAge.isEmpty() -> {
-                            Toast.makeText(context, "Age is mandatory", Toast.LENGTH_SHORT)
+                            Toast
+                                .makeText(context, "Age is mandatory", Toast.LENGTH_SHORT)
                                 .show()
                         }
 
                         donorBloodGroup.isEmpty() -> {
-                            Toast.makeText(context, "BloodGroup is mandatory", Toast.LENGTH_SHORT)
+                            Toast
+                                .makeText(context, "BloodGroup is mandatory", Toast.LENGTH_SHORT)
                                 .show()
                         }
+
                         donorPassword.isEmpty() -> {
-                            Toast.makeText(context, "Password is mandatory", Toast.LENGTH_SHORT)
+                            Toast
+                                .makeText(context, "Password is mandatory", Toast.LENGTH_SHORT)
                                 .show()
                         }
 
@@ -221,10 +227,8 @@ fun JoinDonationScreen() {
 
 fun registerDonor(donorDetails: DonorDetails, context: Context) {
 
-    val firebaseDatabase = FirebaseDatabase.getInstance()
-    val databaseReference = firebaseDatabase.getReference("DonorDetails")
-
-    databaseReference.child(donorDetails.emailid.replace(".", ","))
+    FirebaseDatabase.getInstance().getReference("DonorDetails")
+        .child(donorDetails.emailid.replace(".", ","))
         .setValue(donorDetails)
         .addOnCompleteListener { task ->
             if (task.isSuccessful) {
@@ -244,14 +248,11 @@ fun registerDonor(donorDetails: DonorDetails, context: Context) {
         .addOnFailureListener { _ ->
             Toast.makeText(
                 context,
-                "Something went wrong",
+                "UnExpected Error",
                 Toast.LENGTH_SHORT
             ).show()
         }
 }
-
-
-
 
 
 @Preview(showBackground = true)
@@ -261,9 +262,9 @@ fun JoinDonationScreenPreview() {
 }
 
 data class DonorDetails(
-    var name : String = "",
-    var emailid : String = "",
-    var age : String = "",
-    var bloodGroup : String = "",
+    var name: String = "",
+    var emailid: String = "",
+    var age: String = "",
+    var bloodGroup: String = "",
     var password: String = ""
 )

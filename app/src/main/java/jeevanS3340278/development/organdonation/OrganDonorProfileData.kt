@@ -5,36 +5,36 @@ import android.content.Context
 
 object OrganDonorProfileData {
 
-    fun persistLoginState(context: Context, value: Boolean) {
+    fun putDonorState(context: Context, value: Boolean) {
         val userLogin = context.getSharedPreferences("ORGAN_DONATION", Context.MODE_PRIVATE)
         val editor = userLogin.edit()
-        editor.putBoolean("LOGIN_STATUS", value).apply()
+        editor.putBoolean("DONOR_STATUS", value).apply()
     }
 
-    fun fetchLoginState(context: Context): Boolean {
+    fun getDonorState(context: Context): Boolean {
         val userLogin = context.getSharedPreferences("ORGAN_DONATION", Context.MODE_PRIVATE)
-        return userLogin.getBoolean("LOGIN_STATUS", false)
+        return userLogin.getBoolean("DONOR_STATUS", false)
     }
 
-    fun persistUserName(context: Context, value: String) {
-        val userLogin = context.getSharedPreferences("ORGAN_DONATION", Context.MODE_PRIVATE)
-        val editor = userLogin.edit()
-        editor.putString("USERNAME", value).apply()
-    }
-
-    fun fetchUserName(context: Context): String {
-        val userLogin = context.getSharedPreferences("ORGAN_DONATION", Context.MODE_PRIVATE)
-        return userLogin.getString("USERNAME", "")!!
-    }
-
-    fun persistUserMail(context: Context, value: String) {
+    fun putDonorName(context: Context, value: String) {
         val userLogin = context.getSharedPreferences("ORGAN_DONATION", Context.MODE_PRIVATE)
         val editor = userLogin.edit()
-        editor.putString("USERMAIL", value).apply()
+        editor.putString("DONOR_NAME", value).apply()
     }
 
-    fun fetchUserMail(context: Context): String {
+    fun getDonorName(context: Context): String {
         val userLogin = context.getSharedPreferences("ORGAN_DONATION", Context.MODE_PRIVATE)
-        return userLogin.getString("USERMAIL", "")!!
+        return userLogin.getString("DONOR_NAME", "")!!
+    }
+
+    fun putDonorMail(context: Context, value: String) {
+        val userLogin = context.getSharedPreferences("ORGAN_DONATION", Context.MODE_PRIVATE)
+        val editor = userLogin.edit()
+        editor.putString("DONOR_MAIL", value).apply()
+    }
+
+    fun getDonorMail(context: Context): String {
+        val userLogin = context.getSharedPreferences("ORGAN_DONATION", Context.MODE_PRIVATE)
+        return userLogin.getString("DONOR_MAIL", "")!!
     }
 }

@@ -67,7 +67,7 @@ fun ManageDonorScreen() {
 
     val context = LocalContext.current as Activity
 
-    val userEmail = OrganDonorProfileData.fetchUserMail(context)
+    val userEmail = OrganDonorProfileData.getDonorMail(context)
 
     var donorsList by remember { mutableStateOf(listOf<DonorFormData>()) }
     var isLoading by remember { mutableStateOf(true) }

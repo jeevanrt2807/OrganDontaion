@@ -41,7 +41,7 @@ import com.google.firebase.database.FirebaseDatabase
 class StartDonationActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContent { 
+        setContent {
             StartDonationScreen()
         }
     }
@@ -97,18 +97,22 @@ fun StartDonationScreen() {
         Text(
             modifier = Modifier
                 .clickable {
-                    when{
+                    when {
 
 
                         donorId.isEmpty() -> {
-                            Toast.makeText(context, "EmailId is mandatory", Toast.LENGTH_SHORT)
+                            Toast
+                                .makeText(context, "EmailId is mandatory", Toast.LENGTH_SHORT)
                                 .show()
                         }
+
                         donorPassword.isEmpty() -> {
-                            Toast.makeText(context, "Password is mandatory", Toast.LENGTH_SHORT)
+                            Toast
+                                .makeText(context, "Password is mandatory", Toast.LENGTH_SHORT)
                                 .show()
 
                         }
+
                         else -> {
 
                             val donorDetails = DonorDetails(
@@ -166,33 +170,30 @@ fun StartDonationScreen() {
 
 fun loginDonor(donorDetails: DonorDetails, context: Context) {
 
-
-    val firebaseDatabase = FirebaseDatabase.getInstance()
-    val databaseReference = firebaseDatabase.getReference("DonorDetails").child(donorDetails.emailid.replace(".", ","))
-
-    databaseReference.get().addOnCompleteListener { task ->
+    FirebaseDatabase.getInstance().getReference("DonorDetails")
+        .child(donorDetails.emailid.replace(".", ","))
+        .get().addOnCompleteListener { task ->
         if (task.isSuccessful) {
             val donorData = task.result?.getValue(DonorDetails::class.java)
             if (donorData != null) {
                 if (donorData.password == donorDetails.password) {
-                    Toast.makeText(context, "Login successful", Toast.LENGTH_SHORT).show()
-                    OrganDonorProfileData.persistLoginState(context, true)
-                    OrganDonorProfileData.persistUserMail(context, donorData.emailid)
-                    OrganDonorProfileData.persistUserName(context, donorData.name)
-//                    Toast.makeText(context, "Login Sucessfully", Toast.LENGTH_SHORT).show()
-
+                    OrganDonorProfileData.putDonorState(context, true)
+                    OrganDonorProfileData.putDonorMail(context, donorData.emailid)
+                    OrganDonorProfileData.putDonorName(context, donorData.name)
                     context.startActivity(Intent(context, DonorPanelActivity::class.java))
                     (context as Activity).finish()
+                    Toast.makeText(context, "Login successful", Toast.LENGTH_SHORT).show()
+
                 } else {
-                    Toast.makeText(context, "Seems Incorrect Credentials", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(context, "Incorrect Details", Toast.LENGTH_SHORT).show()
                 }
             } else {
-                Toast.makeText(context, "Your account not found", Toast.LENGTH_SHORT).show()
+                Toast.makeText(context, "Details Not Found", Toast.LENGTH_SHORT).show()
             }
         } else {
             Toast.makeText(
                 context,
-                "Something went wrong",
+                "UnExpected Error",
                 Toast.LENGTH_SHORT
             ).show()
         }

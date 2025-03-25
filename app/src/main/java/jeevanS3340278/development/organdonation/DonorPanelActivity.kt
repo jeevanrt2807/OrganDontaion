@@ -1,10 +1,8 @@
 package jeevanS3340278.development.organdonation
 
 import android.app.Activity
-import android.content.Context
 import android.content.Intent
 import android.os.Bundle
-import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.Image
@@ -12,6 +10,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -36,10 +35,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.google.firebase.database.FirebaseDatabase
-import java.text.SimpleDateFormat
-import java.util.Date
-import java.util.Locale
+import coil.compose.AsyncImagePainter.State.Empty.painter
 
 class DonorPanelActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -60,31 +56,50 @@ fun DonorPanelActivityScreen() {
             .fillMaxSize()
     ) {
 
-        Column(
+        Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .background(
-                    Color.Red
-                )
-                .padding(12.dp)
         ) {
-            Text(
+
+            Column(
                 modifier = Modifier
-                    .fillMaxWidth(),
-                text = "Organ Donation App",
-                color = Color.White,
-                fontSize = 22.sp,
-                textAlign = TextAlign.Center
+                    .fillMaxWidth()
+                    .background(
+                        Color.Red
+                    )
+                    .padding(12.dp)
+            ) {
+                Text(
+                    modifier = Modifier
+                        .fillMaxWidth(),
+                    text = "Organ Donation App",
+                    color = Color.White,
+                    fontSize = 22.sp,
+                    textAlign = TextAlign.Center
+                )
+
+                Text(
+                    modifier = Modifier
+                        .fillMaxWidth(),
+                    text = "By Jeevan Reddy",
+                    color = Color.White,
+                    fontSize = 12.sp,
+                    textAlign = TextAlign.Center
+                )
+            }
+
+            Image(
+                modifier = Modifier
+                    .size(46.dp)
+                    .align(Alignment.CenterEnd)
+                    .padding(vertical = 6.dp, horizontal = 6.dp)
+                    .clickable {
+                        context.startActivity(Intent(context, DonorPersonalActivity::class.java))
+                    },
+                painter = painterResource(id = R.drawable.ic_profile),
+                contentDescription = "Profile Icon"
             )
 
-            Text(
-                modifier = Modifier
-                    .fillMaxWidth(),
-                text = "By Jeevan Reddy",
-                color = Color.White,
-                fontSize = 12.sp,
-                textAlign = TextAlign.Center
-            )
         }
 
         Spacer(modifier = Modifier.height(24.dp))
@@ -100,7 +115,7 @@ fun DonorPanelActivityScreen() {
             Column(
                 modifier = Modifier
                     .clickable {
-                        ManageDonorData.selectedScreen=1
+                        ManageDonorData.selectedScreen = 1
                         ManageDonorData.resetData()
                         context.startActivity(Intent(context, RegisterDonorActivity::class.java))
                     }
@@ -150,8 +165,7 @@ fun DonorPanelActivityScreen() {
                 Image(
                     modifier = Modifier
                         .size(128.dp)
-                        .padding(vertical = 6.dp)
-                        ,
+                        .padding(vertical = 6.dp),
                     painter = painterResource(id = R.drawable.search_donor),
                     contentDescription = "Search Donor"
                 )
@@ -186,8 +200,7 @@ fun DonorPanelActivityScreen() {
                 Image(
                     modifier = Modifier
                         .size(128.dp)
-                        .padding(vertical = 6.dp)
-                        ,
+                        .padding(vertical = 6.dp),
                     painter = painterResource(id = R.drawable.manage_donor),
                     contentDescription = "Update/Mange Donor Details"
                 )
@@ -222,8 +235,7 @@ fun DonorPanelActivityScreen() {
                 Image(
                     modifier = Modifier
                         .size(128.dp)
-                        .padding(vertical = 6.dp)
-                        ,
+                        .padding(vertical = 6.dp),
                     painter = painterResource(id = R.drawable.learn_organ_donation),
                     contentDescription = "Learn About Organ Donation"
                 )

@@ -68,30 +68,15 @@ class SearchDonorsActivity : ComponentActivity() {
 fun DonorSearchScreen() {
     var searchQuery by remember { mutableStateOf("") }
 
-    // Sample Donor List
-//    val donors = listOf(
-//        Donor("Rahul Sharma", 32, "O+", listOf("Kidney", "Liver")),
-//        Donor("Priya Menon", 28, "A+", listOf("Heart", "Cornea")),
-//        Donor("Vikram Reddy", 45, "B-", listOf("Liver", "Skin")),
-//        Donor("Ananya Verma", 36, "AB+", listOf("Bone Marrow", "Pancreas")),
-//        Donor("Arjun Das", 30, "O-", listOf("Lungs", "Cornea")),
-//        Donor("Sneha Kapoor", 27, "B+", listOf("Heart", "Kidney")),
-//        Donor("Ramesh Yadav", 50, "A-", listOf("Liver", "Pancreas"))
-//    )
-
-
     val context = LocalContext.current as Activity
-
-    val userEmail = OrganDonorProfileData.fetchUserMail(context)
-
+    val userEmail = OrganDonorProfileData.getDonorMail(context)
     var donorsList by remember { mutableStateOf(listOf<DonorFormData>()) }
-    var isLoading by remember { mutableStateOf(true) }
+    var loadDonors by remember { mutableStateOf(true) }
 
     LaunchedEffect(userEmail) {
         getDonorsList() { orders ->
             donorsList = orders
-
-            isLoading = false
+            loadDonors = false
         }
     }
 
@@ -128,7 +113,7 @@ fun DonorSearchScreen() {
             Text(
                 modifier = Modifier
                     .fillMaxWidth(),
-                text = "Organ Donor Registration",
+                text = "Search Donor",
                 color = Color.White,
                 fontSize = 22.sp,
                 fontWeight = FontWeight.Bold,
@@ -189,10 +174,10 @@ fun DonorItem(donor: DonorFormData) {
                     bitmap = decodeBase64ToBitmap(donor.imageUrl)!!.asImageBitmap(),
                     contentDescription = "Organ Donor Image",
                     modifier = Modifier
-                        .size(100.dp)
+                        .size(60.dp)
                         .padding(end = 8.dp)
-                        .clip(CircleShape)  // Make it circular
-                        .border(2.dp, Color.Gray, CircleShape),  // Optional border
+                        .clip(CircleShape)
+                        .border(2.dp, Color.Gray, CircleShape),
                     contentScale = ContentScale.Crop
                 )
 
@@ -200,9 +185,9 @@ fun DonorItem(donor: DonorFormData) {
 
             Column() {
                 Text(
-                    text = "Donor Name : ${donor.name}",
+                    text = "Name : ${donor.name}",
                     fontWeight = FontWeight.Bold,
-                    fontSize = 20.sp
+                    fontSize = 16.sp
                 )
                 Text(text = "Age : ${donor.age}", fontSize = 16.sp)
                 Text(text = "Blood Group : ${donor.blood}", fontSize = 16.sp)
@@ -237,89 +222,10 @@ fun getDonorsList(callback: (List<DonorFormData>) -> Unit) {
 }
 
 
-fun getDonorsListOld(userEmail: String, callback: (List<DonorFormData>) -> Unit) {
-    val emailKey = userEmail.replace(".", ",")
-
-    val databaseReference = FirebaseDatabase.getInstance().getReference("RegisteredDonors/")
-
-//    val databaseReference = FirebaseDatabase.getInstance().getReference("RegisteredDonors/$emailKey")
-
-
-    databaseReference.addListenerForSingleValueEvent(object : ValueEventListener {
-        override fun onDataChange(snapshot: DataSnapshot) {
-            val donationsList = mutableListOf<DonorFormData>()
-            for (donationSnapshot in snapshot.children) {
-                val donation = donationSnapshot.getValue(DonorFormData::class.java)
-                donation?.let { donationsList.add(it) }
-            }
-            callback(donationsList)
-        }
-
-        override fun onCancelled(error: DatabaseError) {
-            println("Error: ${error.message}")
-            callback(emptyList())
-        }
-    })
-}
-
-
 fun decodeBase64ToBitmap(base64String: String): Bitmap? {
     val decodedString = Base64.decode(base64String, Base64.DEFAULT)
-
-    // Convert byte array to Bitmap
     val originalBitmap = BitmapFactory.decodeByteArray(decodedString, 0, decodedString.size)
-
     return originalBitmap
-    // Correct the orientation of the image using ExifInterface
-//    return rotateImageToRight(originalBitmap)
 }
 
 
-// Function to rotate the image to the right (90 degrees clockwise)
-fun rotateImageToRight(bitmap: Bitmap): Bitmap {
-    val matrix = Matrix()
-    matrix.postRotate(90f) // Rotate 90 degrees clockwise
-    return Bitmap.createBitmap(bitmap, 0, 0, bitmap.width, bitmap.height, matrix, true)
-}
-
-fun correctOrientation(bitmap: Bitmap, imageBytes: ByteArray): Bitmap {
-    try {
-        // Using ExifInterface to get the orientation of the image
-        val exif = ExifInterface(ByteArrayInputStream(imageBytes))
-
-        // Get the orientation tag from EXIF metadata
-        val orientation =
-            exif.getAttributeInt(ExifInterface.TAG_ORIENTATION, ExifInterface.ORIENTATION_NORMAL)
-
-        // Rotate the image based on the orientation tag
-        return when (orientation) {
-            ExifInterface.ORIENTATION_ROTATE_90 -> rotateBitmap(bitmap, 90f)
-            ExifInterface.ORIENTATION_ROTATE_180 -> rotateBitmap(bitmap, 180f)
-            ExifInterface.ORIENTATION_ROTATE_270 -> rotateBitmap(bitmap, 270f)
-            ExifInterface.ORIENTATION_FLIP_HORIZONTAL -> flipBitmap(
-                bitmap,
-                horizontal = true,
-                false
-            )
-
-            ExifInterface.ORIENTATION_FLIP_VERTICAL -> flipBitmap(bitmap, horizontal = false, true)
-            else -> bitmap // No rotation needed
-        }
-    } catch (e: IOException) {
-        e.printStackTrace()
-    }
-    return bitmap
-}
-
-fun rotateBitmap(source: Bitmap, angle: Float): Bitmap {
-    val matrix = android.graphics.Matrix()
-    matrix.postRotate(angle)
-    return Bitmap.createBitmap(source, 0, 0, source.width, source.height, matrix, true)
-}
-
-fun flipBitmap(source: Bitmap, horizontal: Boolean, vertical: Boolean): Bitmap {
-    val matrix = android.graphics.Matrix()
-    if (horizontal) matrix.postScale(-1f, 1f)
-    if (vertical) matrix.postScale(1f, -1f)
-    return Bitmap.createBitmap(source, 0, 0, source.width, source.height, matrix, true)
-}

@@ -48,21 +48,21 @@ class MainActivity : ComponentActivity() {
 fun DonorLanding()
 {
     val context = LocalContext.current as Activity
-    var showSplash by remember { mutableStateOf(true) }
+    var showWelcome by remember { mutableStateOf(true) }
 
     DisposableEffect(Unit) {
         val job = CoroutineScope(Dispatchers.Main).launch {
             delay(3000)
-            showSplash = false
+            showWelcome = false
         }
         onDispose { job.cancel() }
     }
 
-    if (showSplash) {
+    if (showWelcome) {
         DonorLandingScreen()
 
     } else {
-        val loginStatus = OrganDonorProfileData.fetchLoginState(context)
+        val loginStatus = OrganDonorProfileData.getDonorState(context)
 
         if(loginStatus)
         {
@@ -157,7 +157,7 @@ fun DonorLandingScreen() {
             )
         )
 
-        Spacer(modifier = Modifier.height(36.dp))
+        Spacer(modifier = Modifier.height(64.dp))
 
     }
 }
